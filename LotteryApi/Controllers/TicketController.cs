@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Models.API;
 using Models.Domain;
 using Logging;
-
+using Services;
 
 namespace Controllers
 {
@@ -18,11 +18,13 @@ namespace Controllers
     {
         private readonly IFileLogger logger;
         private IMapper mapper;
+        private ITicketService ticketService;
 
-        public TicketController(IFileLogger logger, IMapper mapper)
+        public TicketController(IFileLogger logger, IMapper mapper, ITicketService ticketService)
         {
             this.logger = logger;
             this.mapper = mapper;
+            this.ticketService = ticketService;
         }
 
         [HttpPost]
@@ -37,22 +39,22 @@ namespace Controllers
 
             var createTicketRequest = this.mapper.Map<Ticket>(ticketRequest);
 
-            //Ticket response = null;
+            Ticket response = null;
 
-            // try
-            // {
-            //     response = await ticketService.CreateTicket(createTicketRequest);
-            // }
-            // catch(ArgumentException argumentException)
-            // {
-            //     return BadRequest(argumentException.Message);
-            // }
-            // catch(Exception)
-            // {
-            //     throw new Exception("Error occurred while saving Ticket");
-            // }
+            try
+            {
+                response = await this.ticketService.CreateTicket(createTicketRequest);
+            }
+            catch(ArgumentException argumentException)
+            {
+                return BadRequest(argumentException.Message);
+            }
+            catch(Exception)
+            {
+                throw new Exception("Error occurred while saving Ticket");
+            }
 
-            return Ok(createTicketRequest);
+            return Ok(response);
         }
 
         [HttpPut]
