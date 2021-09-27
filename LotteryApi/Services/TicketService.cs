@@ -21,5 +21,15 @@ namespace Services
 
             return await this.ticketRepository.SaveTicket(ticket);
         }
+
+        public async Task<Ticket> GetTicket(Guid id)
+        {
+            return await this.ticketRepository.GetTicket(id);
+        }
+
+        public async Task<List<Ticket>> GetAllTickets()
+        {
+            return await this.ticketRepository.GetAllTickets();
+        }
     }
 }

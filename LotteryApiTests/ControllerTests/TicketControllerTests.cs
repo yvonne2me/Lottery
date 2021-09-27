@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using Moq;
@@ -66,6 +67,96 @@ namespace ControllerTests
             //Assert
             var exception = await Assert.ThrowsAsync<Exception>(act);
             Assert.Equal("Error occurred while saving Ticket", exception.Message);
+        }
+
+        [Fact]
+        public async void TicketController_GetTicket_NotFound_Returns_NotFound()
+        {
+            //Assign
+            SetupTestInfo();
+            Ticket ticket = null;
+            this.mockTicketService.Setup(s => s.GetTicket(It.IsAny<Guid>())).ReturnsAsync(ticket);
+            var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
+
+            //Act
+            var response = await sut.Get(Guid.NewGuid());
+            
+            //Assert
+            var notFoundResponse = Assert.IsType<NotFoundResult>(response);
+            Assert.Equal(404, notFoundResponse.StatusCode);
+        }
+
+        [Fact]
+        public async void TicketController_GetTicket_Found_Returns_Ticket()
+        {
+            //Assign
+            SetupTestInfo();
+            var expectedNumberOfLines = 4;
+            Ticket newTicket = new Ticket()
+            {
+                Id = Guid.NewGuid(),
+                NumberOfLines = expectedNumberOfLines
+            };
+
+            this.mockTicketService.Setup(s => s.GetTicket(It.IsAny<Guid>())).ReturnsAsync(newTicket);
+            var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
+
+            //Act
+            var response = await sut.Get(Guid.NewGuid());
+            var okResult = response as OkObjectResult;
+            var result = okResult.Value as Ticket;
+
+            //Assert
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.Equal(expectedNumberOfLines, result.NumberOfLines);
+        }
+
+        [Fact]
+        public async void TicketController_GetAllTickets_NotFound_Returns_NotFound()
+        {
+            //Assign
+            SetupTestInfo();
+            List<Ticket> listOfTickets = null;
+            this.mockTicketService.Setup(s => s.GetAllTickets()).ReturnsAsync(listOfTickets);
+            var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
+
+            //Act
+            var response = await sut.Get();
+            
+            //Assert
+            var notFoundResponse = Assert.IsType<NotFoundResult>(response);
+            Assert.Equal(404, notFoundResponse.StatusCode);
+        }
+
+        [Fact]
+        public async void TicketController_GetAllTickets_Found_Returns_Ticket()
+        {
+            //Assign
+            SetupTestInfo();
+
+            List<Ticket> listOfTickets = new List<Ticket>();
+
+            for(var i=0; i<4; i++)
+            {
+                var ticket = new Ticket()
+                {
+                    NumberOfLines = i
+                };
+
+                listOfTickets.Add(ticket);
+            }
+
+            this.mockTicketService.Setup(s => s.GetAllTickets()).ReturnsAsync(listOfTickets);
+            var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
+
+            //Act
+            var response = await sut.Get();
+            var okResult = response as OkObjectResult;
+            var result = okResult.Value as List<Ticket>;
+
+            //Assert
+            Assert.Equal(200, okResult.StatusCode);
+            Assert.Equal(4, result.Count);
         }
 
         private void SetupTestInfo()

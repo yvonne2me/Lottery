@@ -69,19 +69,36 @@ namespace Controllers
         }
 
         [HttpGet]
+        [Route("{id}")]
+        [Produces("application/json")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]        
+        public async Task<IActionResult> Get(Guid id)
+        {
+            var response = await this.ticketService.GetTicket(id);
+
+            if(response == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(response);
+        }
+
+        [HttpGet]
         [Produces("application/json")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<IActionResult> Get()
         {
-            if(id == Guid.Empty)
+            var response = await this.ticketService.GetAllTickets();
+
+            if(response == null)
             {
-                this.logger.LogInfo("GET all tickets...");
+                return NotFound();
             }
 
-            this.logger.LogInfo("GET individual ticket: " + id);
-
-            return Ok("OK");
+            return Ok(response);
         }
     }
 }

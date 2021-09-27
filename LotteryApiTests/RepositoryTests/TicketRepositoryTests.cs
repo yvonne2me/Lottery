@@ -37,6 +37,55 @@ namespace RepositoryTests
             Assert.Equal(saveNewTicket.Id, response.Id);
         }
 
+        [Fact]
+        public async void TicketRepository_GetTicket_ReturnsTicket()
+        {
+            //Assign
+            SetupTestInfo();
+            var sut = new TicketRepository(mockLogger.Object, _context);
+
+            Ticket saveNewTicket = new Ticket()
+            {
+                Id = Guid.NewGuid(),
+                NumberOfLines = 5
+            };
+            
+            var createdTicket = await sut.SaveTicket(saveNewTicket);
+
+            //Act
+            var response = await sut.GetTicket(createdTicket.Id);
+
+            //Assert
+            Assert.NotNull(response);
+            Assert.Equal(createdTicket.Id, response.Id);
+        }
+
+        [Fact]
+        public async void TicketRepository_GetAllTickets_ReturnsTickets()
+        {
+            //Assign
+            SetupTestInfo();
+            var sut = new TicketRepository(mockLogger.Object, _context);
+
+            for(var i=0; i<4; i++)
+            {
+                var ticket = new Ticket()
+                {
+                    Id = Guid.NewGuid(),
+                    NumberOfLines = i
+                };
+
+                await sut.SaveTicket(ticket);
+            }          
+
+            //Act
+            var response = await sut.GetAllTickets();
+
+            //Assert
+            Assert.NotNull(response);
+        }
+
+
         private void SetupTestInfo()
         {
             mockLogger = new Mock<IFileLogger>();
