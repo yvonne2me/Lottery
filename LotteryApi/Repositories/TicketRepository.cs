@@ -34,6 +34,16 @@ namespace Repositories
                 throw new Exception("Error saving new Ticket");
             }
         }
+
+        public async Task<Ticket> GetTicket(Guid id)
+        {
+            return await _context.Tickets.Where(t => t.Id.Equals(id)).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Ticket>> GetAllTickets()
+        {
+            return await _context.Tickets.ToListAsync();
+        }
     }
     
 }

@@ -1,0 +1,230 @@
+{
+	"info": {
+		"_postman_id": "446b8052-e46d-4ab1-98d4-dd19079c521f",
+		"name": "Lottery Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Tickets",
+			"item": [
+				{
+					"name": "Ticket - OK - 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"POST Ticket - Status: 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": 3\n}"
+						},
+						"url": {
+							"raw": "{{Base_URL}}/ticket",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - GET By Id - Returns 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"GET Ticket - Status: 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage['id']).to.equal(pm.collectionVariables.get('ticketId'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Define a ticket",
+									"var ticket =  {",
+									"    \"numberOfLines\": 3",
+									"}",
+									"",
+									"const body = {",
+									"    mode: \"raw\",",
+									"    raw: ticket,",
+									"}",
+									"",
+									"var options = { method: 'POST',",
+									"  url: pm.collectionVariables.get('Base_URL') + \"/ticket\",",
+									"  header: {\"Content-Type\": \"application/json\"},",
+									"  body: body",
+									"};",
+									"",
+									"pm.sendRequest(options, function (error, response) {",
+									"    if (error) throw new Error(error);",
+									"    var jsonData = response.json();",
+									"    pm.collectionVariables.set('ticketId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{Base_URL}}/ticket/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - GET All - Returns 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"GET All Tickets - Status: 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"for (let i = 0; i < 4; i++) {",
+									"",
+									"    var numberOfLines = Math.floor(Math.random() * 10);",
+									"",
+									"    var ticket = {",
+									"        \"numberOfLines\" : numberOfLines",
+									"    }",
+									"",
+									"    const body = {",
+									"        mode: \"raw\",",
+									"        raw: ticket,",
+									"    }",
+									"",
+									"    var options = { method: 'POST',",
+									"        url: pm.collectionVariables.get('Base_URL') + \"/ticket\",",
+									"        header: {\"Content-Type\": \"application/json\"},",
+									"        body: body",
+									"    };",
+									"",
+									"    pm.sendRequest(options, function (error, response) {",
+									"        if (error) throw new Error(error);",
+									"        var jsonData = response.json();",
+									"        pm.collectionVariables.set('ticketId', jsonData.id);",
+									"    });",
+									"}",
+									"",
+									"",
+									"",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{Base_URL}}/ticket",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "ticketId",
+			"value": ""
+		},
+		{
+			"key": "random_guid",
+			"value": ""
+		},
+		{
+			"key": "Base_URL",
+			"value": "https://localhost:5001"
+		}
+	]
+}
