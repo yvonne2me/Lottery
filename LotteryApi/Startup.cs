@@ -11,6 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Logging;
+using Mappers;
+using AutoMapper;
 
 namespace Lottery
 {
@@ -32,6 +35,18 @@ namespace Lottery
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Lottery", Version = "v1" });
             });
+
+            //Logging
+            services.AddTransient<IFileLogger, FileLogger>();
+
+            // Auto Mapper
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(new MappingProfile());
+            });
+
+            IMapper mapper = mapperConfig.CreateMapper();
+            services.AddSingleton(mapper);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
