@@ -33,6 +33,27 @@ namespace ServiceTests
         }
 
         [Fact]
+        public async void TicketService_UpdateTicket_ReturnsTicket()
+        {
+            //Assign
+            Ticket ticket = new Ticket()
+            {
+                NumberOfLines = 4
+            };
+
+            Mock<ITicketRepository> mockTicketRepository = new Mock<ITicketRepository>();
+            mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(ticket);
+            mockTicketRepository.Setup(r => r.UpdateTicket(It.IsAny<Ticket>())).ReturnsAsync(ticket);
+            var sut = new TicketService(mockTicketRepository.Object);
+
+            //Act
+            var ticketResponse = await sut.UpdateTicket(Guid.NewGuid(), ticket);
+
+            //Assert
+            Assert.NotNull(ticketResponse);
+        }
+
+        [Fact]
         public async void TicketService_GetTicket_ReturnsTicket()
         {
             //Assign

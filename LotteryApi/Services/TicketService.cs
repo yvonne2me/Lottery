@@ -22,6 +22,20 @@ namespace Services
             return await this.ticketRepository.SaveTicket(ticket);
         }
 
+        public async Task<Ticket> UpdateTicket(Guid id, Ticket ticket)
+        {
+            var existingTicket = await this.ticketRepository.GetTicket(id);
+
+            if(existingTicket == null)
+            {
+                existingTicket.Id = id;
+                return await this.ticketRepository.SaveTicket(ticket);
+            }
+
+            ticket.Id = id;
+            return await this.ticketRepository.UpdateTicket(ticket);
+        }
+
         public async Task<Ticket> GetTicket(Guid id)
         {
             return await this.ticketRepository.GetTicket(id);

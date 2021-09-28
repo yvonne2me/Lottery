@@ -8,6 +8,7 @@ namespace Repositories
     public interface ITicketRepository
     {
         Task<Ticket> SaveTicket(Ticket ticket);
+        Task<Ticket> UpdateTicket(Ticket ticket);
         Task<Ticket> GetTicket(Guid id);
         Task<List<Ticket>> GetAllTickets();
     }

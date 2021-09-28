@@ -70,6 +70,55 @@ namespace ControllerTests
         }
 
         [Fact]
+        public async void TicketController_Put_NullRequest_Returns_BadRequest()
+        {
+            //Assign
+            SetupTestInfo();
+            var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
+            TicketRequest ticketRequest = null;
+            Guid id = Guid.NewGuid();
+
+            //Act
+            var response = await sut.Put(id, ticketRequest);
+            var badResponse = response as BadRequestObjectResult;
+
+            //Assert
+            Assert.Equal(400, badResponse.StatusCode);
+            Assert.Equal("No Ticket information provided", badResponse.Value);
+        }
+
+        [Fact]
+        public async void TicketController_Put_ValidRequest_Returns_OK()
+        {
+            //Assign
+            SetupTestInfo();
+            var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
+
+            //Act
+            var response = await sut.Put(Guid.NewGuid(), ticketRequest);
+            var okResponse = response as OkObjectResult;
+
+            //Assert
+            Assert.Equal(200, okResponse.StatusCode);
+        }
+
+        [Fact]
+        public async void TicketController_Put_ExceptionThrown_Returns_Error()
+        {
+            //Assign
+            SetupTestInfo();
+            this.mockTicketService.Setup(s => s.UpdateTicket(It.IsAny<Guid>(), It.IsAny<Ticket>())).Throws(new Exception());
+            var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
+
+            //Act
+            Func<Task> act = () => sut.Put(Guid.NewGuid(), ticketRequest);
+
+            //Assert
+            var exception = await Assert.ThrowsAsync<Exception>(act);
+            Assert.Equal("Error occurred while updating Ticket", exception.Message);
+        }
+
+        [Fact]
         public async void TicketController_GetTicket_NotFound_Returns_NotFound()
         {
             //Assign
