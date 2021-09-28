@@ -8,6 +8,7 @@ using Repositories;
 using Logging;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System;
 
 namespace RepositoryTests
@@ -23,12 +24,7 @@ namespace RepositoryTests
             //Assign
             SetupTestInfo();
             var sut = new TicketRepository(mockLogger.Object, _context);
-
-            Ticket saveNewTicket = new Ticket()
-            {
-                Id = Guid.NewGuid(),
-                NumberOfLines = 5
-            };
+            var saveNewTicket = CreateTicket();
 
             //Act
             var response = await sut.SaveTicket(saveNewTicket);
@@ -43,27 +39,30 @@ namespace RepositoryTests
             //Assign
             SetupTestInfo();
             var sut = new TicketRepository(mockLogger.Object, _context);
-
-            Ticket saveNewTicket = new Ticket()
-            {
-                Id = Guid.NewGuid(),
-                NumberOfLines = 5
-            };
+            var saveNewTicket = CreateTicket();
 
             await sut.SaveTicket(saveNewTicket);
+
+            List<Line> lines = new List<Line>();
+
+            Line line = new Line();
+            line.Id = Guid.NewGuid();
+            line.Numbers = "0, 0, 0";           
+            lines.Add(line);
 
             Ticket updatedTicket = new Ticket()
             {
                 Id = saveNewTicket.Id,
-                NumberOfLines = 2
+                Lines = lines
             };
 
+            var numberOfLines = 2;
+
             //Act
-            var response = await sut.UpdateTicket(updatedTicket);
+            var response = await sut.UpdateTicket(updatedTicket, numberOfLines);
 
             //Assert
             Assert.Equal(saveNewTicket.Id, response.Id);
-            Assert.Equal(updatedTicket.NumberOfLines, response.NumberOfLines);
         }
 
         [Fact]
@@ -73,18 +72,28 @@ namespace RepositoryTests
             SetupTestInfo();
             var sut = new TicketRepository(mockLogger.Object, _context);
 
+            var updatedTicketId = Guid.NewGuid();
+
+            List<Line> lines = new List<Line>();
+
+            Line line = new Line();
+            line.Id = Guid.NewGuid();
+            line.TicketId = updatedTicketId;
+            line.Numbers = "1, 0, 2";           
+            lines.Add(line);
+
             Ticket updatedTicket = new Ticket()
             {
-                Id = Guid.NewGuid(),
-                NumberOfLines = 2
+                Id = updatedTicketId,
+                Lines = lines
             };
 
+            var numberOfLines = 4;
             //Act
-            var response = await sut.UpdateTicket(updatedTicket);
+            var response = await sut.UpdateTicket(updatedTicket, numberOfLines);
 
             //Assert
-            Assert.Equal(updatedTicket.Id, response.Id);
-            Assert.Equal(updatedTicket.NumberOfLines, response.NumberOfLines);
+            Assert.Equal(updatedTicketId, response.Id);
         }
 
         [Fact]
@@ -93,12 +102,7 @@ namespace RepositoryTests
             //Assign
             SetupTestInfo();
             var sut = new TicketRepository(mockLogger.Object, _context);
-
-            Ticket saveNewTicket = new Ticket()
-            {
-                Id = Guid.NewGuid(),
-                NumberOfLines = 5
-            };
+            var saveNewTicket = CreateTicket();
             
             var createdTicket = await sut.SaveTicket(saveNewTicket);
 
@@ -119,13 +123,7 @@ namespace RepositoryTests
 
             for(var i=0; i<4; i++)
             {
-                var ticket = new Ticket()
-                {
-                    Id = Guid.NewGuid(),
-                    NumberOfLines = i
-                };
-
-                await sut.SaveTicket(ticket);
+                await sut.SaveTicket(CreateTicket());
             }          
 
             //Act
@@ -135,7 +133,6 @@ namespace RepositoryTests
             Assert.NotNull(response);
         }
 
-
         private void SetupTestInfo()
         {
             mockLogger = new Mock<IFileLogger>();
@@ -143,6 +140,32 @@ namespace RepositoryTests
                     .UseInMemoryDatabase("LotteryContext");
 
             _context = new LotteryContext(builder.Options);
+        }
+
+        private Ticket CreateTicket()
+        {
+            Guid ticketId = Guid.NewGuid();    
+            Ticket newTicket = new Ticket()
+            {
+                Id = ticketId,
+                Lines = CreateLines(ticketId)
+            };
+
+            return newTicket;
+        }
+
+        private List<Line> CreateLines(Guid ticketId)
+        {
+            Line line = new Line();
+            line.Id = Guid.NewGuid();
+            line.TicketId = ticketId;
+            line.Numbers = "0, 1, 2";
+
+            List<Line> lines = new List<Line>();
+
+            lines.Add(line);
+
+            return lines;
         }
     }
 }

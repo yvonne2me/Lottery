@@ -8,7 +8,8 @@ namespace Mappers
     {
         public MappingProfile()
         {
-            CreateMap<TicketRequest, Ticket>();
+            CreateMap<Ticket, TicketResponse>();
+            CreateMap<Line, LineResponse>();
         }
     }
 }

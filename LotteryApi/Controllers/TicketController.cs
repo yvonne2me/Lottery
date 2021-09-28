@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Models.API;
-using Models.Domain;
 using Logging;
 using Services;
 
@@ -37,13 +33,12 @@ namespace Controllers
                 return BadRequest("No Ticket information provided");
             }
 
-            var createTicketRequest = this.mapper.Map<Ticket>(ticketRequest);
-
-            Ticket response = null;
+            TicketResponse response = null;
 
             try
             {
-                response = await this.ticketService.CreateTicket(createTicketRequest);
+                var createTicketResponse = await this.ticketService.CreateTicket(ticketRequest);
+                response = this.mapper.Map<TicketResponse>(createTicketResponse);
             }
             catch(ArgumentException argumentException)
             {
@@ -70,13 +65,12 @@ namespace Controllers
                 return BadRequest("No Ticket information provided");
             }
 
-            var createTicketRequest = this.mapper.Map<Ticket>(ticketRequest);
-
-            Ticket response = null;
+            TicketResponse response = null;
 
             try
             {
-                response = await this.ticketService.UpdateTicket(id, createTicketRequest);
+                var updateTicketResponse = await this.ticketService.UpdateTicket(id, ticketRequest);
+                response = this.mapper.Map<TicketResponse>(updateTicketResponse);
             }
             catch(ArgumentException argumentException)
             {

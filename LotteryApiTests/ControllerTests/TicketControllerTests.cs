@@ -58,7 +58,7 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            this.mockTicketService.Setup(s => s.CreateTicket(It.IsAny<Ticket>())).Throws(new Exception());
+            this.mockTicketService.Setup(s => s.CreateTicket(It.IsAny<TicketRequest>())).Throws(new Exception());
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
@@ -107,7 +107,7 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            this.mockTicketService.Setup(s => s.UpdateTicket(It.IsAny<Guid>(), It.IsAny<Ticket>())).Throws(new Exception());
+            this.mockTicketService.Setup(s => s.UpdateTicket(It.IsAny<Guid>(), It.IsAny<TicketRequest>())).Throws(new Exception());
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
@@ -140,12 +140,8 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            var expectedNumberOfLines = 4;
-            Ticket newTicket = new Ticket()
-            {
-                Id = Guid.NewGuid(),
-                NumberOfLines = expectedNumberOfLines
-            };
+
+            var newTicket = CreateTicket();
 
             this.mockTicketService.Setup(s => s.GetTicket(It.IsAny<Guid>())).ReturnsAsync(newTicket);
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
@@ -157,7 +153,7 @@ namespace ControllerTests
 
             //Assert
             Assert.Equal(200, okResult.StatusCode);
-            Assert.Equal(expectedNumberOfLines, result.NumberOfLines);
+            Assert.Equal(newTicket.Id, result.Id);
         }
 
         [Fact]
@@ -187,11 +183,7 @@ namespace ControllerTests
 
             for(var i=0; i<4; i++)
             {
-                var ticket = new Ticket()
-                {
-                    NumberOfLines = i
-                };
-
+                var ticket = CreateTicket();
                 listOfTickets.Add(ticket);
             }
 
@@ -217,6 +209,28 @@ namespace ControllerTests
             {
                 NumberOfLines = 10
             };
+        }
+
+        private Ticket CreateTicket()
+        {
+            Guid ticketId = Guid.NewGuid();
+            
+            Line line = new Line();
+            line.Id = Guid.NewGuid();
+            line.TicketId = ticketId;
+            line.Numbers = "2, 1, 0";
+
+            List<Line> lines = new List<Line>(){};
+
+            lines.Add(line);
+
+            Ticket newTicket = new Ticket()
+            {
+                Id = Guid.NewGuid(),
+                Lines = lines
+            };
+
+            return newTicket;
         }
     }
 }
