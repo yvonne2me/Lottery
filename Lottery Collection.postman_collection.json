@@ -137,7 +137,7 @@
 									"pm.test(\"PUT Ticket - Ticket Data Updated\", function () {",
 									"",
 									"    var responseMessage = pm.response.json();",
-									"    pm.expect(responseMessage['numberOfLines']).to.equal(7);",
+									"    pm.expect(responseMessage['lines'].length).to.equal(5);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -178,7 +178,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"NumberOfLines\": 7\n}",
+							"raw": "{\n  \"NumberOfLines\": 2\n}",
 							"options": {
 								"raw": {
 									"language": "json"

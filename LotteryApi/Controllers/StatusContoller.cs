@@ -2,6 +2,9 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Logging;
+using Services;
+using Models.API;
+using AutoMapper;
 
 namespace Controllers
 {
@@ -9,11 +12,16 @@ namespace Controllers
     [Route("[controller]")]
     public class StatusController : ControllerBase
     {
-        private readonly IFileLogger _logger;
+        private readonly IFileLogger logger;
+        private IMapper mapper;
 
-        public StatusController(IFileLogger logger)
+        private IStatusService statusService;
+
+        public StatusController(IFileLogger logger, IMapper mapper, IStatusService statusService)
         {
-            _logger = logger;
+            this.logger = logger;
+            this.mapper = mapper;
+            this.statusService = statusService;
         }
 
         [HttpPut]
@@ -22,7 +30,22 @@ namespace Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> Put(Guid id)
         {
-            return Ok("OK");
+            StatusResponse response = null;
+
+            try
+            {
+                response = await this.statusService.GetTicketStatus(id);
+            }
+            catch(ArgumentException argumentException)
+            {
+                return BadRequest(argumentException.Message);
+            }
+            catch(Exception)
+            {
+                throw new Exception("Error occurred while checking Status");
+            }
+
+            return Ok(response);
         }
     }
 }

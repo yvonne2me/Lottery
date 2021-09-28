@@ -7,8 +7,6 @@ namespace Models.Domain
     {
         public Guid Id { get; set;}
         public Guid TicketId { get; set;}
-        public int Result { get; set;}
-
         //TODO: Come back and review this
         public string Numbers { get; set; }
     }
