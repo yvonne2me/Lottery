@@ -38,6 +38,56 @@ namespace RepositoryTests
         }
 
         [Fact]
+        public async void TicketRepository_UpdateTicket_Success()
+        {
+            //Assign
+            SetupTestInfo();
+            var sut = new TicketRepository(mockLogger.Object, _context);
+
+            Ticket saveNewTicket = new Ticket()
+            {
+                Id = Guid.NewGuid(),
+                NumberOfLines = 5
+            };
+
+            await sut.SaveTicket(saveNewTicket);
+
+            Ticket updatedTicket = new Ticket()
+            {
+                Id = saveNewTicket.Id,
+                NumberOfLines = 2
+            };
+
+            //Act
+            var response = await sut.UpdateTicket(updatedTicket);
+
+            //Assert
+            Assert.Equal(saveNewTicket.Id, response.Id);
+            Assert.Equal(updatedTicket.NumberOfLines, response.NumberOfLines);
+        }
+
+        [Fact]
+        public async void TicketRepository_UpdateTicket_TicketDoesNotExist_Success()
+        {
+            //Assign
+            SetupTestInfo();
+            var sut = new TicketRepository(mockLogger.Object, _context);
+
+            Ticket updatedTicket = new Ticket()
+            {
+                Id = Guid.NewGuid(),
+                NumberOfLines = 2
+            };
+
+            //Act
+            var response = await sut.UpdateTicket(updatedTicket);
+
+            //Assert
+            Assert.Equal(updatedTicket.Id, response.Id);
+            Assert.Equal(updatedTicket.NumberOfLines, response.NumberOfLines);
+        }
+
+        [Fact]
         public async void TicketRepository_GetTicket_ReturnsTicket()
         {
             //Assign

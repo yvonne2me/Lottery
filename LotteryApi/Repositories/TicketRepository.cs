@@ -35,6 +35,19 @@ namespace Repositories
             }
         }
 
+        public async Task<Ticket> UpdateTicket(Ticket ticket)
+        {
+            var existingTicket = await GetTicket(ticket.Id);
+
+            if(existingTicket != null)
+            {
+                _context.Tickets.Remove(existingTicket);
+                return await SaveTicket(ticket);
+            }
+
+            return await SaveTicket(ticket);            
+        }
+
         public async Task<Ticket> GetTicket(Guid id)
         {
             return await _context.Tickets.Where(t => t.Id.Equals(id)).FirstOrDefaultAsync();

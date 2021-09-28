@@ -58,14 +58,36 @@ namespace Controllers
         }
 
         [HttpPut]
+        [Route("{id}")]
         [Produces("application/json")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Put([FromBody] TicketRequest ticketRequest)
+        public async Task<IActionResult> Put(Guid id, [FromBody] TicketRequest ticketRequest)
         {
-            this.logger.LogInfo("PUT existing ticket");
+            if(ticketRequest == null)
+            {
+                this.logger.LogInfo("Ticket Request info null - Returning Bad Request");
+                return BadRequest("No Ticket information provided");
+            }
 
-            return Ok("OK");
+            var createTicketRequest = this.mapper.Map<Ticket>(ticketRequest);
+
+            Ticket response = null;
+
+            try
+            {
+                response = await this.ticketService.UpdateTicket(id, createTicketRequest);
+            }
+            catch(ArgumentException argumentException)
+            {
+                return BadRequest(argumentException.Message);
+            }
+            catch(Exception)
+            {
+                throw new Exception("Error occurred while updating Ticket");
+            }
+
+            return Ok(response);
         }
 
         [HttpGet]
