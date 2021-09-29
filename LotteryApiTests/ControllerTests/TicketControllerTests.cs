@@ -11,6 +11,7 @@ using Models.API;
 using Models.Domain;
 using Services;
 using Microsoft.AspNetCore.Mvc;
+using Builders;
 
 namespace ControllerTests
 {
@@ -25,7 +26,7 @@ namespace ControllerTests
         public async void TicketController_Post_NullRequest_Returns_BadRequest()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
             TicketRequest ticketRequest = null;
 
@@ -42,7 +43,7 @@ namespace ControllerTests
         public async void TicketController_Post_ValidRequest_Returns_OK()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
@@ -57,7 +58,7 @@ namespace ControllerTests
         public async void TicketController_Post_ExceptionThrown_Returns_Error()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             this.mockTicketService.Setup(s => s.CreateTicket(It.IsAny<TicketRequest>())).Throws(new Exception());
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
@@ -73,7 +74,7 @@ namespace ControllerTests
         public async void TicketController_Put_NullRequest_Returns_BadRequest()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
             TicketRequest ticketRequest = null;
             Guid id = Guid.NewGuid();
@@ -91,7 +92,7 @@ namespace ControllerTests
         public async void TicketController_Put_ValidRequest_Returns_OK()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
@@ -106,7 +107,7 @@ namespace ControllerTests
         public async void TicketController_Put_ExceptionThrown_Returns_Error()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             this.mockTicketService.Setup(s => s.UpdateTicket(It.IsAny<Guid>(), It.IsAny<TicketRequest>())).Throws(new Exception());
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
@@ -122,7 +123,7 @@ namespace ControllerTests
         public async void TicketController_GetTicket_NotFound_Returns_NotFound()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             this.mockTicketService.Setup(s => s.GetTicket(It.IsAny<Guid>())).Throws(new TicketNotFoundException("Ticket Does Not Exist"));
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
@@ -138,7 +139,7 @@ namespace ControllerTests
         public async void TicketController_GetTicket_Found_Returns_Ticket()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
 
             var newTicket = CreateTicket();
 
@@ -157,7 +158,7 @@ namespace ControllerTests
         public async void TicketController_GetAllTickets_NotFound_Returns_NotFound()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
             this.mockTicketService.Setup(s => s.GetAllTickets()).Throws(new TicketNotFoundException("Ticket Does Not Exist"));
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
@@ -173,7 +174,7 @@ namespace ControllerTests
         public async void TicketController_GetAllTickets_Found_Returns_Ticket()
         {
             //Assign
-            SetupTestInfo();
+            SetupMocksAndTestData();
 
             List<Ticket> listOfTickets = new List<Ticket>();
 
@@ -196,7 +197,7 @@ namespace ControllerTests
             Assert.Equal(4, result.Count);
         }
 
-        private void SetupTestInfo()
+        private void SetupMocksAndTestData()
         {
             this.mockLogger = new Mock<IFileLogger>();            
             this.mockMapper = new Mock<IMapper>();
@@ -211,19 +212,10 @@ namespace ControllerTests
         {
             Guid ticketId = Guid.NewGuid();
             
-            Line line = new Line();
-            line.Id = Guid.NewGuid();
-            line.TicketId = ticketId;
-            line.Numbers = "2, 1, 0";
-
-            List<Line> lines = new List<Line>(){};
-
-            lines.Add(line);
-
             Ticket newTicket = new Ticket()
             {
                 Id = ticketId,
-                Lines = lines
+                Lines = LineBuilder.CreateLines(ticketId, 3)
             };
 
             return newTicket;

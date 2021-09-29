@@ -2,7 +2,7 @@ using System;
 
 namespace Models.API
 {
-    public class LineResponse
+    public class Line
     {
         public string Numbers { get; set; }
     }

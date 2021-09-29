@@ -20,20 +20,25 @@ namespace Services
 
         public async Task<Ticket> CreateTicket(TicketRequest ticketRequest)
         {
-            Ticket ticket = new Ticket()
-            {
-                Id = Guid.NewGuid()
-            };
-
-            ticket.Lines = LineBuilder.CreateLines(ticket.Id, ticketRequest.NumberOfLines);
+            var ticket = BuildTicket(Guid.NewGuid(), ticketRequest.NumberOfLines);
 
             return await this.ticketRepository.SaveTicket(ticket);
         }
 
         public async Task<Ticket> UpdateTicket(Guid id, TicketRequest ticketRequest)
         {
-            //TODO: IF Existing Ticket Does Not Exist
             var existingTicket = await this.ticketRepository.GetTicket(id);
+
+            if(existingTicket == null)
+            {
+                var newTicket = BuildTicket(id, ticketRequest.NumberOfLines);
+                return await this.ticketRepository.SaveTicket(newTicket);
+            }
+
+            if(existingTicket.Checked)
+            {
+                throw new ArgumentException("Ticket already checked and cannot be updated");
+            }
 
             return await this.ticketRepository.UpdateTicket(existingTicket, ticketRequest.NumberOfLines);
         }
@@ -60,6 +65,17 @@ namespace Services
             }
 
             return tickets;
+        }
+
+        private Ticket BuildTicket(Guid ticketId, int numberOfLines)
+        {
+            Ticket ticket = new Ticket()
+            {
+                Id = ticketId
+            };
+
+            ticket.Lines = LineBuilder.CreateLines(ticketId, numberOfLines);
+            return ticket;
         }
     }
 }

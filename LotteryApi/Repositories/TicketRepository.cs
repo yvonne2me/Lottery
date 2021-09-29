@@ -6,6 +6,7 @@ using Logging;
 using Models;
 using Models.Domain;
 using Microsoft.EntityFrameworkCore;
+using Builders;
 
 namespace Repositories
 {
@@ -22,7 +23,11 @@ namespace Repositories
 
         public async Task<Ticket> SaveTicket(Ticket ticket)
         {
-            SaveLinesAndNumbers(ticket);
+            foreach(var line in ticket.Lines)
+            {
+                _context.Lines.Add(line);  
+            }
+
             _context.Tickets.Add(ticket);
 
             if(await _context.SaveChangesAsync() > 0)
@@ -38,16 +43,10 @@ namespace Repositories
 
         public async Task<Ticket> UpdateTicket(Ticket existingTicket, int numberOfLines)
         {
-            for(var i=0; i < numberOfLines; i++)
-            {
-                Line newLine = new Line()
-                {
-                    Id = Guid.NewGuid(),
-                    TicketId = existingTicket.Id,
-                    //TODO: Come back and fix
-                    Numbers = "1, 2, 3"
-                };
+            var newLines = LineBuilder.CreateLines(existingTicket.Id, numberOfLines);
 
+            foreach(var newLine in newLines)
+            {
                 _context.Entry(newLine).State = EntityState.Added;
             }
 
@@ -89,16 +88,6 @@ namespace Repositories
                 logger.LogError("TicketRepository - StatusChecked - Unable to set status to checked on Ticket");
                 throw new Exception("Error updating checked status on Ticket");
             }
-        }
-
-        private void SaveLinesAndNumbers(Ticket ticket)
-        {
-            foreach(var line in ticket.Lines)
-            {
-                _context.Lines.Add(line);  
-            }
-
-            return;                      
         }
     }
     

@@ -5,87 +5,42 @@ using Models;
 using Models.Domain;
 using Repositories;
 using Logging;
-using System.Collections.Generic;
 using System;
+using Builders;
 
 namespace RepositoryTests
 {
     public class TicketRepositoryTests
     {
-        LotteryContext _context;
+        LotteryContext context;
         Mock<IFileLogger> mockLogger;
+        Ticket newTicket;
 
         [Fact]
         public async void TicketRepository_SaveTicket_Success()
         {
             //Assign
-            SetupTestInfo();
-            var sut = new TicketRepository(mockLogger.Object, _context);
-            var saveNewTicket = CreateTicket();
+            SetupMocksAndTestData();
+            var sut = new TicketRepository(mockLogger.Object, context);
 
             //Act
-            var response = await sut.SaveTicket(saveNewTicket);
+            var response = await sut.SaveTicket(newTicket);
 
             //Assert
-            Assert.Equal(saveNewTicket.Id, response.Id);
+            Assert.Equal(newTicket.Id, response.Id);
         }
 
         [Fact]
         public async void TicketRepository_UpdateTicket_Success()
         {
             //Assign
-            SetupTestInfo();
-            var sut = new TicketRepository(mockLogger.Object, _context);
-            var saveNewTicket = CreateTicket();
-
-            await sut.SaveTicket(saveNewTicket);
-
-            List<Line> lines = new List<Line>();
-
-            Line line = new Line();
-            line.Id = Guid.NewGuid();
-            line.Numbers = "0, 0, 0";           
-            lines.Add(line);
-
-            Ticket updatedTicket = new Ticket()
-            {
-                Id = saveNewTicket.Id,
-                Lines = lines
-            };
-
-            var numberOfLines = 2;
-
-            //Act
-            var response = await sut.UpdateTicket(updatedTicket, numberOfLines);
-
-            //Assert
-            Assert.Equal(saveNewTicket.Id, response.Id);
-        }
-
-        [Fact]
-        public async void TicketRepository_UpdateTicket_TicketDoesNotExist_Success()
-        {
-            //Assign
-            SetupTestInfo();
-            var sut = new TicketRepository(mockLogger.Object, _context);
-
+            SetupMocksAndTestData();
+            var sut = new TicketRepository(mockLogger.Object, context);
             var updatedTicketId = Guid.NewGuid();
-
-            List<Line> lines = new List<Line>();
-
-            Line line = new Line();
-            line.Id = Guid.NewGuid();
-            line.TicketId = updatedTicketId;
-            line.Numbers = "1, 0, 2";           
-            lines.Add(line);
-
-            Ticket updatedTicket = new Ticket()
-            {
-                Id = updatedTicketId,
-                Lines = lines
-            };
-
             var numberOfLines = 4;
+
+            Ticket updatedTicket = new Ticket(){ Id = updatedTicketId };
+
             //Act
             var response = await sut.UpdateTicket(updatedTicket, numberOfLines);
 
@@ -97,28 +52,27 @@ namespace RepositoryTests
         public async void TicketRepository_GetTicket_ReturnsTicket()
         {
             //Assign
-            SetupTestInfo();
-            var sut = new TicketRepository(mockLogger.Object, _context);
-            var saveNewTicket = CreateTicket();
-            
-            var createdTicket = await sut.SaveTicket(saveNewTicket);
+            SetupMocksAndTestData();
+            var sut = new TicketRepository(mockLogger.Object, context);
+            await sut.SaveTicket(this.newTicket);
 
             //Act
-            var response = await sut.GetTicket(createdTicket.Id);
+            var response = await sut.GetTicket(this.newTicket.Id);
 
             //Assert
             Assert.NotNull(response);
-            Assert.Equal(createdTicket.Id, response.Id);
+            Assert.Equal(newTicket.Id, response.Id);
         }
 
         [Fact]
         public async void TicketRepository_GetAllTickets_ReturnsTickets()
         {
             //Assign
-            SetupTestInfo();
-            var sut = new TicketRepository(mockLogger.Object, _context);
+            SetupMocksAndTestData();
+            var sut = new TicketRepository(mockLogger.Object, context);
+            var ticketsToCreate = 2;
 
-            for(var i=0; i<4; i++)
+            for(var i=0; i<ticketsToCreate; i++)
             {
                 await sut.SaveTicket(CreateTicket());
             }          
@@ -130,39 +84,39 @@ namespace RepositoryTests
             Assert.NotNull(response);
         }
 
-        private void SetupTestInfo()
+        [Fact]
+        public async void TicketRepository_StatusChecked_ReturnsTrue()
         {
-            mockLogger = new Mock<IFileLogger>();
+            //Assign
+            SetupMocksAndTestData();
+            var sut = new TicketRepository(mockLogger.Object, context);
+            await sut.SaveTicket(this.newTicket);
+
+            //Act
+            var response = await sut.StatusChecked(this.newTicket);
+
+            //Assert
+            Assert.True(response);
+        }
+
+        private void SetupMocksAndTestData()
+        {
+            this.mockLogger = new Mock<IFileLogger>();
             var builder = new DbContextOptionsBuilder<LotteryContext>()
                     .UseInMemoryDatabase("LotteryContext");
 
-            _context = new LotteryContext(builder.Options);
+            this.context = new LotteryContext(builder.Options);
+            this.newTicket = CreateTicket();
         }
 
         private Ticket CreateTicket()
         {
             Guid ticketId = Guid.NewGuid();    
-            Ticket newTicket = new Ticket()
+            return new Ticket()
             {
                 Id = ticketId,
-                Lines = CreateLines(ticketId)
+                Lines = LineBuilder.CreateLines(ticketId, 3)
             };
-
-            return newTicket;
-        }
-
-        private List<Line> CreateLines(Guid ticketId)
-        {
-            Line line = new Line();
-            line.Id = Guid.NewGuid();
-            line.TicketId = ticketId;
-            line.Numbers = "0, 1, 2";
-
-            List<Line> lines = new List<Line>();
-
-            lines.Add(line);
-
-            return lines;
         }
     }
 }

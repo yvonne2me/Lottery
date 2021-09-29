@@ -38,10 +38,6 @@ namespace Controllers
             {
                 response = await this.statusService.GetTicketResult(id);
             }
-            catch(ArgumentException argumentException)
-            {
-                return BadRequest(argumentException.Message);
-            }
             catch(TicketNotFoundException ticketNotFoundException)
             {
                 return NotFound(ticketNotFoundException.Message);
