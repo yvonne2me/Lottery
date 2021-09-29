@@ -6,9 +6,9 @@ using Moq;
 using AutoMapper;
 using Controllers;
 using Logging;
+using Exceptions;
 using Models.API;
 using Models.Domain;
-using Mappers;
 using Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -58,7 +58,7 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            this.mockTicketService.Setup(s => s.CreateTicket(It.IsAny<Ticket>())).Throws(new Exception());
+            this.mockTicketService.Setup(s => s.CreateTicket(It.IsAny<TicketRequest>())).Throws(new Exception());
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
@@ -107,7 +107,7 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            this.mockTicketService.Setup(s => s.UpdateTicket(It.IsAny<Guid>(), It.IsAny<Ticket>())).Throws(new Exception());
+            this.mockTicketService.Setup(s => s.UpdateTicket(It.IsAny<Guid>(), It.IsAny<TicketRequest>())).Throws(new Exception());
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
@@ -123,15 +123,14 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            Ticket ticket = null;
-            this.mockTicketService.Setup(s => s.GetTicket(It.IsAny<Guid>())).ReturnsAsync(ticket);
+            this.mockTicketService.Setup(s => s.GetTicket(It.IsAny<Guid>())).Throws(new TicketNotFoundException("Ticket Does Not Exist"));
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
             var response = await sut.Get(Guid.NewGuid());
             
             //Assert
-            var notFoundResponse = Assert.IsType<NotFoundResult>(response);
+            var notFoundResponse = Assert.IsType<NotFoundObjectResult>(response);
             Assert.Equal(404, notFoundResponse.StatusCode);
         }
 
@@ -140,12 +139,8 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            var expectedNumberOfLines = 4;
-            Ticket newTicket = new Ticket()
-            {
-                Id = Guid.NewGuid(),
-                NumberOfLines = expectedNumberOfLines
-            };
+
+            var newTicket = CreateTicket();
 
             this.mockTicketService.Setup(s => s.GetTicket(It.IsAny<Guid>())).ReturnsAsync(newTicket);
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
@@ -153,11 +148,9 @@ namespace ControllerTests
             //Act
             var response = await sut.Get(Guid.NewGuid());
             var okResult = response as OkObjectResult;
-            var result = okResult.Value as Ticket;
 
             //Assert
             Assert.Equal(200, okResult.StatusCode);
-            Assert.Equal(expectedNumberOfLines, result.NumberOfLines);
         }
 
         [Fact]
@@ -165,15 +158,14 @@ namespace ControllerTests
         {
             //Assign
             SetupTestInfo();
-            List<Ticket> listOfTickets = null;
-            this.mockTicketService.Setup(s => s.GetAllTickets()).ReturnsAsync(listOfTickets);
+            this.mockTicketService.Setup(s => s.GetAllTickets()).Throws(new TicketNotFoundException("Ticket Does Not Exist"));
             var sut = new TicketController(mockLogger.Object, mockMapper.Object, mockTicketService.Object);
 
             //Act
             var response = await sut.Get();
             
             //Assert
-            var notFoundResponse = Assert.IsType<NotFoundResult>(response);
+            var notFoundResponse = Assert.IsType<NotFoundObjectResult>(response);
             Assert.Equal(404, notFoundResponse.StatusCode);
         }
 
@@ -187,11 +179,7 @@ namespace ControllerTests
 
             for(var i=0; i<4; i++)
             {
-                var ticket = new Ticket()
-                {
-                    NumberOfLines = i
-                };
-
+                var ticket = CreateTicket();
                 listOfTickets.Add(ticket);
             }
 
@@ -201,7 +189,7 @@ namespace ControllerTests
             //Act
             var response = await sut.Get();
             var okResult = response as OkObjectResult;
-            var result = okResult.Value as List<Ticket>;
+            var result = okResult.Value as List<TicketResponse>;
 
             //Assert
             Assert.Equal(200, okResult.StatusCode);
@@ -215,8 +203,30 @@ namespace ControllerTests
             this.mockTicketService = new Mock<ITicketService>();
             this.ticketRequest = new TicketRequest()
             {
-                NumberOfLines = 10
+                NumberOfLines = 3
             };
+        }
+        
+        private Ticket CreateTicket()
+        {
+            Guid ticketId = Guid.NewGuid();
+            
+            Line line = new Line();
+            line.Id = Guid.NewGuid();
+            line.TicketId = ticketId;
+            line.Numbers = "2, 1, 0";
+
+            List<Line> lines = new List<Line>(){};
+
+            lines.Add(line);
+
+            Ticket newTicket = new Ticket()
+            {
+                Id = ticketId,
+                Lines = lines
+            };
+
+            return newTicket;
         }
     }
 }

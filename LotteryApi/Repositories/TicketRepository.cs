@@ -22,6 +22,7 @@ namespace Repositories
 
         public async Task<Ticket> SaveTicket(Ticket ticket)
         {
+            SaveLinesAndNumbers(ticket);
             _context.Tickets.Add(ticket);
 
             if(await _context.SaveChangesAsync() > 0)
@@ -35,27 +36,69 @@ namespace Repositories
             }
         }
 
-        public async Task<Ticket> UpdateTicket(Ticket ticket)
+        public async Task<Ticket> UpdateTicket(Ticket existingTicket, int numberOfLines)
         {
-            var existingTicket = await GetTicket(ticket.Id);
-
-            if(existingTicket != null)
+            for(var i=0; i < numberOfLines; i++)
             {
-                _context.Tickets.Remove(existingTicket);
-                return await SaveTicket(ticket);
+                Line newLine = new Line()
+                {
+                    Id = Guid.NewGuid(),
+                    TicketId = existingTicket.Id,
+                    //TODO: Come back and fix
+                    Numbers = "1, 2, 3"
+                };
+
+                _context.Entry(newLine).State = EntityState.Added;
             }
 
-            return await SaveTicket(ticket);            
+            if(await _context.SaveChangesAsync() > 0)
+            {
+                return existingTicket;
+            }
+            else
+            {
+                logger.LogError("TicketRepository - UpdateTicket - Unable to Update Ticket");
+                throw new Exception("Error updating Ticket");
+            }
         }
 
         public async Task<Ticket> GetTicket(Guid id)
         {
-            return await _context.Tickets.Where(t => t.Id.Equals(id)).FirstOrDefaultAsync();
+            return await _context.Tickets.Where(t => t.Id.Equals(id))
+                                .Include(t => t.Lines.Where(l => l.TicketId.Equals(id)))
+                                .FirstOrDefaultAsync();
         }
 
         public async Task<List<Ticket>> GetAllTickets()
         {
-            return await _context.Tickets.ToListAsync();
+            return await _context.Tickets.Include(t => t.Lines).ToListAsync();
+        }
+
+        public async Task<bool> StatusChecked(Ticket ticket)
+        {
+            ticket.Checked = true;
+            
+            _context.Entry(ticket).State = EntityState.Modified;
+
+            if(await _context.SaveChangesAsync() > 0)
+            {
+                return true;
+            }
+            else
+            {
+                logger.LogError("TicketRepository - StatusChecked - Unable to set status to checked on Ticket");
+                throw new Exception("Error updating checked status on Ticket");
+            }
+        }
+
+        private void SaveLinesAndNumbers(Ticket ticket)
+        {
+            foreach(var line in ticket.Lines)
+            {
+                _context.Lines.Add(line);  
+            }
+
+            return;                      
         }
     }
     
