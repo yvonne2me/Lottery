@@ -17,6 +17,11 @@
 								"exec": [
 									"pm.test(\"POST Ticket - Status: 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"POST Ticket - Correct Line Count\", function () {",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage['lines'].length).to.equal(parseInt(pm.collectionVariables.get('random_number')));",
 									"});"
 								],
 								"type": "text/javascript"
@@ -43,7 +48,110 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"NumberOfLines\": 3\n}"
+							"raw": "{\n  \"NumberOfLines\": {{random_number}}\n}"
+						},
+						"url": {
+							"raw": "{{Base_URL}}/ticket",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - Bad Request - 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"POST Ticket - Status: 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": \"Incorrect\"\n}"
+						},
+						"url": {
+							"raw": "{{Base_URL}}/ticket",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - Invalid Number of Lines - 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"POST Ticket - Status: 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"POST Ticket - Invalid Number of Lines - Error Message Returned\", function () {",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage.errors.NumberOfLines[0]).to.equal(\"The field NumberOfLines must be greater than 1.\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": 0\n}"
 						},
 						"url": {
 							"raw": "{{Base_URL}}/ticket",
@@ -66,9 +174,16 @@
 								"exec": [
 									"pm.test(\"GET Ticket - Status: 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
 									"",
+									"pm.test(\"GET Ticket - Correct Id\", function () {",
 									"    var responseMessage = pm.response.json();",
 									"    pm.expect(responseMessage['id']).to.equal(pm.collectionVariables.get('ticketId'));",
+									"});",
+									"",
+									"pm.test(\"GET Ticket - Correct Line Count\", function () {",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage['lines'].length).to.equal(parseInt(pm.collectionVariables.get('numberOfLines')));",
 									"});"
 								],
 								"type": "text/javascript"
@@ -80,7 +195,7 @@
 								"exec": [
 									"// Define a ticket",
 									"var ticket =  {",
-									"    \"numberOfLines\": 3",
+									"    \"numberOfLines\": pm.collectionVariables.get('numberOfLines')",
 									"}",
 									"",
 									"const body = {",
@@ -176,15 +291,16 @@
 								"exec": [
 									"pm.test(\"PUT Ticket - Status: 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
 									"",
+									"pm.test(\"PUT Ticket - Correct Id\", function () {",
 									"    var responseMessage = pm.response.json();",
 									"    pm.expect(responseMessage['id']).to.equal(pm.collectionVariables.get('ticketId'));",
 									"});",
 									"",
-									"pm.test(\"PUT Ticket - Ticket Data Updated\", function () {",
-									"",
+									"pm.test(\"PUT Ticket - Correct Line Count\", function () {",
 									"    var responseMessage = pm.response.json();",
-									"    pm.expect(responseMessage['lines'].length).to.equal(5);",
+									"    pm.expect(responseMessage['lines'].length).to.equal(4);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -196,7 +312,7 @@
 								"exec": [
 									"// Define a ticket",
 									"var ticket =  {",
-									"    \"numberOfLines\": 3",
+									"    \"numberOfLines\": pm.collectionVariables.get('numberOfLines')",
 									"}",
 									"",
 									"const body = {",
@@ -225,7 +341,294 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"NumberOfLines\": 2\n}",
+							"raw": "{\n  \"NumberOfLines\": {{numberOfLines}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Base_URL}}/ticket/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - PUT - Invalid Number Of Lines - 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PUT Ticket - Status: 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"PUT Ticket - Invalid Number of Lines - Error Message Returned\", function () {",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage.errors.NumberOfLines[0]).to.equal(\"The field NumberOfLines must be greater than 1.\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Define a ticket",
+									"var ticket =  {",
+									"    \"numberOfLines\": pm.collectionVariables.get('numberOfLines')",
+									"}",
+									"",
+									"const body = {",
+									"    mode: \"raw\",",
+									"    raw: ticket,",
+									"}",
+									"",
+									"var options = { method: 'POST',",
+									"  url: pm.collectionVariables.get('Base_URL') + \"/ticket\",",
+									"  header: {\"Content-Type\": \"application/json\"},",
+									"  body: body",
+									"};",
+									"",
+									"pm.sendRequest(options, function (error, response) {",
+									"    if (error) throw new Error(error);",
+									"    var jsonData = response.json();",
+									"    pm.collectionVariables.set('ticketId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Base_URL}}/ticket/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - PUT - Bad Request - 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PUT Ticket - Status: 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Define a ticket",
+									"var ticket =  {",
+									"    \"numberOfLines\": pm.collectionVariables.get('numberOfLines')",
+									"}",
+									"",
+									"const body = {",
+									"    mode: \"raw\",",
+									"    raw: ticket,",
+									"}",
+									"",
+									"var options = { method: 'POST',",
+									"  url: pm.collectionVariables.get('Base_URL') + \"/ticket\",",
+									"  header: {\"Content-Type\": \"application/json\"},",
+									"  body: body",
+									"};",
+									"",
+									"pm.sendRequest(options, function (error, response) {",
+									"    if (error) throw new Error(error);",
+									"    var jsonData = response.json();",
+									"    pm.collectionVariables.set('ticketId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": \"Incorrect\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Base_URL}}/ticket/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - PUT - Ticket Already Checked - 400",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PUT Ticket - Ticket Already Checked - Status: 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"PUT Ticket - 400 - Message: Ticket already checked and cannot be updated\", function(){",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage).to.equal(\"Ticket already checked and cannot be updated\");",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Define a ticket",
+									"var ticket =  {",
+									"    \"numberOfLines\": pm.collectionVariables.get('numberOfLines')",
+									"}",
+									"",
+									"const body = {",
+									"    mode: \"raw\",",
+									"    raw: ticket,",
+									"}",
+									"",
+									"var postTicketOptions = { method: 'POST',",
+									"  url: pm.collectionVariables.get('Base_URL') + \"/ticket\",",
+									"  header: {\"Content-Type\": \"application/json\"},",
+									"  body: body",
+									"};",
+									"",
+									"pm.sendRequest(postTicketOptions, function (error, response) {",
+									"    if (error) throw new Error(error)",
+									"    else {",
+									"        var jsonData = response.json();",
+									"        pm.collectionVariables.set('ticketId', jsonData.id);",
+									"",
+									"        var putStatusOptions = { method: 'PUT',",
+									"            url: pm.collectionVariables.get('Base_URL') + \"/status\" + \"/\" + pm.collectionVariables.get('ticketId'),",
+									"            header: {\"Content-Type\": \"application/json\"},",
+									"            body: body",
+									"        };",
+									"",
+									"        pm.sendRequest(putStatusOptions, function (err, res) {});",
+									"    };",
+									"    ",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": {{numberOfLines}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Base_URL}}/ticket/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - PUT - No Existing Ticket - Ticket Created - 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PUT Ticket - Status: 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"PUT Ticket - Correct Id\", function () {",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage['id']).to.equal(pm.collectionVariables.get('ticketId'));",
+									"});",
+									"",
+									"pm.test(\"PUT Ticket - Ticket Data Updated\", function () {",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage['lines'].length).to.equal(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"ticketId\", pm.variables.replaceIn('{{$guid}}'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": {{numberOfLines}}\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -257,10 +660,9 @@
 									"",
 									"});",
 									"",
-									"pm.test(\"PUT Status - Correct Number of Result Lines\", function () {",
-									"",
+									"pm.test(\"PUT Status - Correct Line Status Count\", function () {",
 									"    var responseMessage = pm.response.json();",
-									"    pm.expect(responseMessage['lineResults'].length).to.equal(3);",
+									"    pm.expect(responseMessage['lineStatus'].length).to.equal(parseInt(pm.collectionVariables.get('random_number')));",
 									"});"
 								],
 								"type": "text/javascript"
@@ -272,7 +674,7 @@
 								"exec": [
 									"// Define a ticket",
 									"var ticket =  {",
-									"    \"numberOfLines\": 3",
+									"    \"numberOfLines\": pm.collectionVariables.get('random_number')",
 									"}",
 									"",
 									"const body = {",
@@ -301,7 +703,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"NumberOfLines\": 2\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -355,7 +757,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"NumberOfLines\": 2\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -447,6 +849,7 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
+					"pm.collectionVariables.set(\"random_number\", _.random(1, 5))",
 					""
 				]
 			}
@@ -473,6 +876,14 @@
 		{
 			"key": "Base_URL",
 			"value": "https://localhost:5001"
+		},
+		{
+			"key": "numberOfLines",
+			"value": ""
+		},
+		{
+			"key": "random_number",
+			"value": ""
 		}
 	]
 }

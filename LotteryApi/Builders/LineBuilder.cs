@@ -24,7 +24,7 @@ namespace Builders
             return lines;
         }
 
-        public static Line AddLine(Guid ticketId)
+        private static Line AddLine(Guid ticketId)
         {
             Line line = new Line()
             {

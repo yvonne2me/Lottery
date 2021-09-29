@@ -7,6 +7,8 @@ using Services;
 using System.Collections.Generic;
 using System;
 using Builders;
+using System.Threading.Tasks;
+using Exceptions;
 
 namespace ServiceTests
 {
@@ -14,23 +16,48 @@ namespace ServiceTests
     {
         Mock<ITicketRepository> mockTicketRepository;
         Ticket ticket;
+        const int NumberOfLines = 4;
         
         [Fact]
-        public async void TicketService_CreateTicket_AssignsId()
+        public async void TicketService_CreateTicket_ReturnsTicket()
         {
             //Assign
             SetupMocksAndTestData();
             TicketRequest ticketRequest = new TicketRequest()
             {
-                NumberOfLines = 6
-            };           
+                NumberOfLines = NumberOfLines
+            };
+
+            mockTicketRepository.Setup(r => r.SaveTicket(It.IsAny<Ticket>())).ReturnsAsync(this.ticket);
             var sut = new TicketService(this.mockTicketRepository.Object);
 
             //Act
             var ticketResponse = await sut.CreateTicket(ticketRequest);
 
             //Assert
-            Assert.NotEqual(Guid.Empty, ticketResponse.Id);
+            Assert.Equal(this.ticket.Id, ticketResponse.Id);
+            Assert.Equal(NumberOfLines, ticketResponse.Lines.Count);
+        }
+
+        [Fact]
+        public async void TicketService_CreateTicket_InvalidNumberOfLines_ThrowsArgumentException()
+        {
+            //Assign
+            SetupMocksAndTestData();
+            TicketRequest ticketRequest = new TicketRequest()
+            {
+                NumberOfLines = 0
+            };
+
+            mockTicketRepository.Setup(r => r.SaveTicket(It.IsAny<Ticket>())).ReturnsAsync(this.ticket);
+            var sut = new TicketService(this.mockTicketRepository.Object);
+
+            //Act
+            Func<Task> act = () => sut.CreateTicket(ticketRequest);
+
+            //Assert
+            var exception = await Assert.ThrowsAsync<ArgumentException>(act);
+            Assert.Equal("Invalid Number of Lines", exception.Message);
         }
 
         [Fact]
@@ -38,20 +65,65 @@ namespace ServiceTests
         {
             //Assign
             SetupMocksAndTestData();
-            var ticketRequest = new TicketRequest()
+            TicketRequest ticketRequest = new TicketRequest()
             {
-                NumberOfLines = 4
+                NumberOfLines = NumberOfLines
             };
 
-            this.mockTicketRepository.Setup(r => r.UpdateTicket(It.IsAny<Ticket>(), It.IsAny<int>()))
-                    .ReturnsAsync(this.ticket);
+            this.mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(this.ticket);
+            this.mockTicketRepository.Setup(r => r.UpdateTicket(It.IsAny<Ticket>(), It.IsAny<int>())).ReturnsAsync(this.ticket);
             var sut = new TicketService(this.mockTicketRepository.Object);
 
             //Act
-            var ticketResponse = await sut.UpdateTicket(ticket.Id, ticketRequest);
+            var ticketResponse = await sut.UpdateTicket(this.ticket.Id, ticketRequest);
 
             //Assert
-            Assert.NotNull(ticketResponse);
+            Assert.Equal(this.ticket.Id, ticketResponse.Id);
+            Assert.Equal(NumberOfLines, ticketResponse.Lines.Count);
+        }
+
+        [Fact]
+        public async void TicketService_UpdateTicket_TicketDoesNotExist_SaveTicketCalled()
+        {
+            //Assign
+            SetupMocksAndTestData();
+            TicketRequest ticketRequest = new TicketRequest()
+            {
+                NumberOfLines = NumberOfLines
+            };
+
+            Ticket nullTicket = null;
+            this.mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(nullTicket);
+            var sut = new TicketService(this.mockTicketRepository.Object);
+
+            //Act
+            var ticketResponse = await sut.UpdateTicket(this.ticket.Id, ticketRequest);
+            
+            //Assert
+            this.mockTicketRepository.Verify(x => x.SaveTicket(It.IsAny<Ticket>()), Times.Once);
+        }
+
+        [Fact]
+        public async void TicketService_UpdateTicket_AlreadyChecked_ThrowsArgumentException()
+        {
+            //Assign
+            SetupMocksAndTestData();
+            this.ticket.Checked = true;
+
+            TicketRequest ticketRequest = new TicketRequest()
+            {
+                NumberOfLines = NumberOfLines
+            };
+
+            this.mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(this.ticket);
+            var sut = new TicketService(this.mockTicketRepository.Object);
+
+            //Act
+            Func<Task> act = () => sut.UpdateTicket(this.ticket.Id, ticketRequest);
+
+            //Assert
+            var exception = await Assert.ThrowsAsync<ArgumentException>(act);
+            Assert.Equal("Ticket already checked and cannot be updated", exception.Message);
         }
 
         [Fact]
@@ -59,13 +131,31 @@ namespace ServiceTests
         {
             //Assign
             SetupMocksAndTestData();
+            this.mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(this.ticket);
             var sut = new TicketService(this.mockTicketRepository.Object);
 
             //Act
-            var ticketResponse = await sut.GetTicket(ticket.Id);
+            var ticketResponse = await sut.GetTicket(this.ticket.Id);
 
             //Assert
-            Assert.Equal(ticket.Id, ticketResponse.Id);
+            Assert.Equal(this.ticket.Id, ticketResponse.Id);
+        }
+
+        [Fact]
+        public async void TicketService_GetTicket_TicketDoesNotExist_ThrowsTicketNotFoundException()
+        {
+            //Assign
+            SetupMocksAndTestData();
+            Ticket nullTicket = null;
+            this.mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(nullTicket);
+            var sut = new TicketService(this.mockTicketRepository.Object);
+
+            //Act
+            Func<Task> act = () => sut.GetTicket(Guid.NewGuid());
+
+            //Assert
+            var exception = await Assert.ThrowsAsync<TicketNotFoundException>(act);
+            Assert.Equal("Ticket Does Not Exist", exception.Message);
         }
 
         [Fact]
@@ -75,10 +165,13 @@ namespace ServiceTests
             SetupMocksAndTestData();
 
             List<Ticket> listOfTickets = new List<Ticket>();
+            var ticketId = Guid.NewGuid();
+            var numberOfTickets = 4;
 
-            for(var i=0; i<4; i++)
+            for(var i=0; i<numberOfTickets; i++)
             {
-                var ticket = CreateTicket();
+                var ticket = new Ticket(){ Id = ticketId };
+                ticket.Lines = LineBuilder.CreateLines(ticketId, NumberOfLines);
                 listOfTickets.Add(ticket);
             }
 
@@ -89,33 +182,35 @@ namespace ServiceTests
             var ticketResponse = await sut.GetAllTickets();
 
             //Assert
-            Assert.Equal(4, ticketResponse.Count);
+            Assert.Equal(numberOfTickets, ticketResponse.Count);
+        }
+
+        [Fact]
+        public async void TicketService_GetAllTickets_NoTickets_ThrowsTicketNotFoundException()
+        {
+            //Assign
+            SetupMocksAndTestData();
+            List<Ticket> nullListTicket = null;
+            this.mockTicketRepository.Setup(r => r.GetAllTickets()).ReturnsAsync(nullListTicket);
+            var sut = new TicketService(this.mockTicketRepository.Object);
+
+            //Act
+            Func<Task> act = () => sut.GetAllTickets();
+
+            //Assert
+            var exception = await Assert.ThrowsAsync<TicketNotFoundException>(act);
+            Assert.Equal("No Tickets Found", exception.Message);
         }
         
         private void SetupMocksAndTestData()
         {
-            this.ticket = CreateTicket();
+            var ticketId = Guid.NewGuid();
+            this.ticket = new Ticket() 
+            { 
+                Id = Guid.NewGuid(),
+                Lines = LineBuilder.CreateLines(ticketId, NumberOfLines)
+            };
             mockTicketRepository = new Mock<ITicketRepository>();
-            mockTicketRepository.Setup(r => r.SaveTicket(It.IsAny<Ticket>())).ReturnsAsync(ticket);
-            mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(ticket);
         }
-
-        private Ticket CreateTicket()
-        {
-            Guid ticketId = Guid.NewGuid();
-            Ticket newTicket = new Ticket(){ Id = ticketId };
-            newTicket.Lines = LineBuilder.CreateLines(ticketId, 3);
-            return newTicket;
-        }
-
-        // private List<Line> CreateLines(Guid ticketId)
-        // {
-        //     List<Line> lines = new List<Line>();
-        //     Line line = new Line() { Id = Guid.NewGuid(), TicketId = ticketId};
-        //     line.Numbers = "0, 1, 2";           
-        //     lines.Add(line);
-
-        //     return lines;
-        // }
     }
 }
