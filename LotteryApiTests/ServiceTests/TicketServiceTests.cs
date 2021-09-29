@@ -4,32 +4,27 @@ using Models.API;
 using Models.Domain;
 using Repositories;
 using Services;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
+using Builders;
 
 namespace ServiceTests
 {
     public class TicketServiceTests
     {
-
+        Mock<ITicketRepository> mockTicketRepository;
+        Ticket ticket;
+        
         [Fact]
         public async void TicketService_CreateTicket_AssignsId()
         {
             //Assign
-            var ticket = CreateTicket();
-            var lines = CreateLines(ticket.Id);
-
+            SetupMocksAndTestData();
             TicketRequest ticketRequest = new TicketRequest()
             {
                 NumberOfLines = 6
-            };
-
-            Mock<ILineService> mockLineService = new Mock<ILineService>();
-            Mock<ITicketRepository> mockTicketRepository = new Mock<ITicketRepository>();
-            mockLineService.Setup(l => l.CreateLines(It.IsAny<Guid>(), It.IsAny<int>())).Returns(lines);
-            mockTicketRepository.Setup(r => r.SaveTicket(It.IsAny<Ticket>())).ReturnsAsync(ticket);
-            var sut = new TicketService(mockLineService.Object, mockTicketRepository.Object);
+            };           
+            var sut = new TicketService(this.mockTicketRepository.Object);
 
             //Act
             var ticketResponse = await sut.CreateTicket(ticketRequest);
@@ -42,19 +37,15 @@ namespace ServiceTests
         public async void TicketService_UpdateTicket_ReturnsTicket()
         {
             //Assign
-            var ticket = CreateTicket();
-            var lines = CreateLines(ticket.Id);
+            SetupMocksAndTestData();
             var ticketRequest = new TicketRequest()
             {
                 NumberOfLines = 4
             };
 
-            Mock<ILineService> mockLineService = new Mock<ILineService>();
-            Mock<ITicketRepository> mockTicketRepository = new Mock<ITicketRepository>();
-            mockLineService.Setup(l => l.CreateLines(It.IsAny<Guid>(), It.IsAny<int>())).Returns(lines);
-            mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(ticket);
-            mockTicketRepository.Setup(r => r.UpdateTicket(It.IsAny<Ticket>(), It.IsAny<int>())).ReturnsAsync(ticket);
-            var sut = new TicketService(mockLineService.Object, mockTicketRepository.Object);
+            this.mockTicketRepository.Setup(r => r.UpdateTicket(It.IsAny<Ticket>(), It.IsAny<int>()))
+                    .ReturnsAsync(this.ticket);
+            var sut = new TicketService(this.mockTicketRepository.Object);
 
             //Act
             var ticketResponse = await sut.UpdateTicket(ticket.Id, ticketRequest);
@@ -67,14 +58,8 @@ namespace ServiceTests
         public async void TicketService_GetTicket_ReturnsTicket()
         {
             //Assign
-            var ticket = CreateTicket();
-            var lines = CreateLines(ticket.Id);
-
-            Mock<ILineService> mockLineService = new Mock<ILineService>();
-            Mock<ITicketRepository> mockTicketRepository = new Mock<ITicketRepository>();
-            mockLineService.Setup(l => l.CreateLines(It.IsAny<Guid>(), It.IsAny<int>())).Returns(lines);
-            mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(ticket);
-            var sut = new TicketService(mockLineService.Object, mockTicketRepository.Object);
+            SetupMocksAndTestData();
+            var sut = new TicketService(this.mockTicketRepository.Object);
 
             //Act
             var ticketResponse = await sut.GetTicket(ticket.Id);
@@ -87,8 +72,9 @@ namespace ServiceTests
         public async void TicketService_GetAllTickets_ReturnsTickets()
         {
             //Assign
+            SetupMocksAndTestData();
+
             List<Ticket> listOfTickets = new List<Ticket>();
-            var lines = CreateLines(Guid.NewGuid());
 
             for(var i=0; i<4; i++)
             {
@@ -96,11 +82,8 @@ namespace ServiceTests
                 listOfTickets.Add(ticket);
             }
 
-            Mock<ILineService> mockLineService = new Mock<ILineService>();
-            Mock<ITicketRepository> mockTicketRepository = new Mock<ITicketRepository>();
-            mockLineService.Setup(l => l.CreateLines(It.IsAny<Guid>(), It.IsAny<int>())).Returns(lines);
-            mockTicketRepository.Setup(r => r.GetAllTickets()).ReturnsAsync(listOfTickets);
-            var sut = new TicketService(mockLineService.Object, mockTicketRepository.Object);
+            this.mockTicketRepository.Setup(r => r.GetAllTickets()).ReturnsAsync(listOfTickets);
+            var sut = new TicketService(this.mockTicketRepository.Object);
 
             //Act
             var ticketResponse = await sut.GetAllTickets();
@@ -109,31 +92,30 @@ namespace ServiceTests
             Assert.Equal(4, ticketResponse.Count);
         }
         
+        private void SetupMocksAndTestData()
+        {
+            this.ticket = CreateTicket();
+            mockTicketRepository = new Mock<ITicketRepository>();
+            mockTicketRepository.Setup(r => r.SaveTicket(It.IsAny<Ticket>())).ReturnsAsync(ticket);
+            mockTicketRepository.Setup(r => r.GetTicket(It.IsAny<Guid>())).ReturnsAsync(ticket);
+        }
+
         private Ticket CreateTicket()
         {
             Guid ticketId = Guid.NewGuid();
-
-            Ticket newTicket = new Ticket()
-            {
-                Id = Guid.NewGuid(),
-                Lines = CreateLines(ticketId)
-            };
-
+            Ticket newTicket = new Ticket(){ Id = ticketId };
+            newTicket.Lines = LineBuilder.CreateLines(ticketId, 3);
             return newTicket;
         }
 
-        private List<Line> CreateLines(Guid ticketId)
-        {
-            Line line = new Line();
-            line.Id = Guid.NewGuid();
-            line.TicketId = ticketId;
-            line.Numbers = "0, 1, 2";
+        // private List<Line> CreateLines(Guid ticketId)
+        // {
+        //     List<Line> lines = new List<Line>();
+        //     Line line = new Line() { Id = Guid.NewGuid(), TicketId = ticketId};
+        //     line.Numbers = "0, 1, 2";           
+        //     lines.Add(line);
 
-            List<Line> lines = new List<Line>(){};
-
-            lines.Add(line);
-
-            return lines;
-        }
+        //     return lines;
+        // }
     }
 }

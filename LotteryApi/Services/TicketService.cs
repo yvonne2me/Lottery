@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Models.API;
 using Models.Domain;
 using Repositories;
+using Exceptions;
+using Builders;
 
 namespace Services
 {
     public class TicketService : ITicketService
     {
-        ILineService lineService;
         ITicketRepository ticketRepository;
 
-        public TicketService(ILineService lineService, ITicketRepository ticketRepository)
+        public TicketService(ITicketRepository ticketRepository)
         {
-            this.lineService = lineService;
             this.ticketRepository = ticketRepository;
         }
 
@@ -26,7 +25,7 @@ namespace Services
                 Id = Guid.NewGuid()
             };
 
-            ticket.Lines = this.lineService.CreateLines(ticket.Id, ticketRequest.NumberOfLines);
+            ticket.Lines = LineBuilder.CreateLines(ticket.Id, ticketRequest.NumberOfLines);
 
             return await this.ticketRepository.SaveTicket(ticket);
         }
@@ -41,12 +40,26 @@ namespace Services
 
         public async Task<Ticket> GetTicket(Guid id)
         {
-            return await this.ticketRepository.GetTicket(id);
+            var ticket = await this.ticketRepository.GetTicket(id);
+
+            if(ticket == null)
+            {
+                throw new TicketNotFoundException("Ticket Does Not Exist");
+            }
+
+            return ticket;
         }
 
         public async Task<List<Ticket>> GetAllTickets()
         {
-            return await this.ticketRepository.GetAllTickets();
+            var tickets = await this.ticketRepository.GetAllTickets();
+
+            if(tickets == null || tickets.Count ==0)
+            {
+                throw new TicketNotFoundException("No Tickets Found");
+            }
+
+            return tickets;
         }
     }
 }

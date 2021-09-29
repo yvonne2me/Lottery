@@ -7,6 +7,6 @@ namespace Models.Domain
     {
         public Guid Id { get; set; }
         public List<Line> Lines { get; set; }
-        private bool Checked { get; set; }
+        public bool Checked { get; set; }
     }
 }

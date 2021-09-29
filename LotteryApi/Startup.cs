@@ -48,7 +48,6 @@ namespace Lottery
 
             //Services
             services.AddScoped<ITicketService, TicketService>();
-            services.AddScoped<ILineService, LineService>();
             services.AddScoped<IStatusService, StatusService>();
 
             //Repositories

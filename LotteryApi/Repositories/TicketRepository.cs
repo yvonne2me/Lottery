@@ -71,7 +71,24 @@ namespace Repositories
 
         public async Task<List<Ticket>> GetAllTickets()
         {
-            return await _context.Tickets.ToListAsync();
+            return await _context.Tickets.Include(t => t.Lines).ToListAsync();
+        }
+
+        public async Task<bool> StatusChecked(Ticket ticket)
+        {
+            ticket.Checked = true;
+            
+            _context.Entry(ticket).State = EntityState.Modified;
+
+            if(await _context.SaveChangesAsync() > 0)
+            {
+                return true;
+            }
+            else
+            {
+                logger.LogError("TicketRepository - StatusChecked - Unable to set status to checked on Ticket");
+                throw new Exception("Error updating checked status on Ticket");
+            }
         }
 
         private void SaveLinesAndNumbers(Ticket ticket)

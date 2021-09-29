@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Models.API;
 using Logging;
 using Services;
+using Exceptions;
+using System.Collections.Generic;
+using Models.Domain;
 
 namespace Controllers
 {
@@ -91,11 +94,21 @@ namespace Controllers
         [ProducesResponseType(404)]        
         public async Task<IActionResult> Get(Guid id)
         {
-            var response = await this.ticketService.GetTicket(id);
+            TicketResponse response = null;
 
-            if(response == null)
+            try
             {
-                return NotFound();
+                var getTicket = await this.ticketService.GetTicket(id);
+                response = this.mapper.Map<TicketResponse>(getTicket);
+
+            }
+            catch(TicketNotFoundException ticketNotFoundException)
+            {
+                return NotFound(ticketNotFoundException.Message);
+            }
+            catch(Exception)
+            {
+                throw new Exception("Error occurred while getting Ticket");
             }
 
             return Ok(response);
@@ -107,11 +120,28 @@ namespace Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> Get()
         {
-            var response = await this.ticketService.GetAllTickets();
+            List<TicketResponse> response = null;
 
-            if(response == null)
+            try
             {
-                return NotFound();
+                var getAllTickets = await this.ticketService.GetAllTickets();
+
+                response = new List<TicketResponse>();
+
+                foreach(var ticket in getAllTickets)
+                {
+                    var element = this.mapper.Map<TicketResponse>(ticket);                  
+                    response.Add(element);
+                }               
+
+            }
+            catch(TicketNotFoundException ticketNotFoundException)
+            {
+                return NotFound(ticketNotFoundException.Message);
+            }
+            catch(Exception)
+            {
+                throw new Exception("Error occurred while getting Ticket");
             }
 
             return Ok(response);

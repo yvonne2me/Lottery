@@ -6,6 +6,6 @@ namespace Services
 {
     public interface IStatusService
     {
-        Task<StatusResponse> GetTicketStatus(Guid id);
+        Task<Status> GetTicketResult(Guid id);
     }
 }

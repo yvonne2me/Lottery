@@ -1,6 +1,6 @@
 namespace Models.API
 {
-    public class StatusLineResponse
+    public class LineStatus
     {
         public string Numbers { get; set; }
         public int Result { get; set;}

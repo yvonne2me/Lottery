@@ -58,7 +58,7 @@
 					"response": []
 				},
 				{
-					"name": "Ticket - GET By Id - Returns 200",
+					"name": "Ticket - GET By Id - 200",
 					"event": [
 						{
 							"listen": "test",
@@ -121,7 +121,54 @@
 					"response": []
 				},
 				{
-					"name": "Ticket - PUT - Returns 200",
+					"name": "Ticket - GET By Id - 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"GET Ticket - Status: 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"GET Ticket - 404 - Message: Ticket Does Not Exist\", function(){",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage).to.equal(\"Ticket Does Not Exist\");",
+									"})",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"ticketId\", pm.variables.replaceIn('{{$guid}}'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{Base_URL}}/ticket/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"ticket",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - PUT - 200",
 					"event": [
 						{
 							"listen": "test",
@@ -199,7 +246,137 @@
 					"response": []
 				},
 				{
-					"name": "Ticket - GET All - Returns 200",
+					"name": "Status - PUT - 200",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PUT Status - Status: 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"});",
+									"",
+									"pm.test(\"PUT Status - Correct Number of Result Lines\", function () {",
+									"",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage['lineResults'].length).to.equal(3);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Define a ticket",
+									"var ticket =  {",
+									"    \"numberOfLines\": 3",
+									"}",
+									"",
+									"const body = {",
+									"    mode: \"raw\",",
+									"    raw: ticket,",
+									"}",
+									"",
+									"var options = { method: 'POST',",
+									"  url: pm.collectionVariables.get('Base_URL') + \"/ticket\",",
+									"  header: {\"Content-Type\": \"application/json\"},",
+									"  body: body",
+									"};",
+									"",
+									"pm.sendRequest(options, function (error, response) {",
+									"    if (error) throw new Error(error);",
+									"    var jsonData = response.json();",
+									"    pm.collectionVariables.set('ticketId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Base_URL}}/status/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"status",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Status - PUT - 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"PUT Status - Status: 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"PUT Status - 404 - Message: Ticket Does Not Exist\", function(){",
+									"    var responseMessage = pm.response.json();",
+									"    pm.expect(responseMessage).to.equal(\"Ticket Does Not Exist\");",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"ticketId\", pm.variables.replaceIn('{{$guid}}'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"NumberOfLines\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Base_URL}}/status/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"status",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ticket - GET All - 200",
 					"event": [
 						{
 							"listen": "test",
@@ -218,7 +395,7 @@
 								"exec": [
 									"for (let i = 0; i < 4; i++) {",
 									"",
-									"    var numberOfLines = Math.floor(Math.random() * 10);",
+									"    var numberOfLines = Math.floor(Math.random() * 4);",
 									"",
 									"    var ticket = {",
 									"        \"numberOfLines\" : numberOfLines",
@@ -240,14 +417,7 @@
 									"        var jsonData = response.json();",
 									"        pm.collectionVariables.set('ticketId', jsonData.id);",
 									"    });",
-									"}",
-									"",
-									"",
-									"",
-									"",
-									"",
-									"",
-									""
+									"}"
 								],
 								"type": "text/javascript"
 							}

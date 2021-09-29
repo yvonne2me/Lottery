@@ -1,3 +1,5 @@
+using System;
+
 namespace Models.API
 {
     public class LineResponse

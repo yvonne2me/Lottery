@@ -5,6 +5,7 @@ using Logging;
 using Services;
 using Models.API;
 using AutoMapper;
+using Exceptions;
 
 namespace Controllers
 {
@@ -25,20 +26,25 @@ namespace Controllers
         }
 
         [HttpPut]
+        [Route("{id}")]
         [Produces("application/json")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         public async Task<IActionResult> Put(Guid id)
         {
-            StatusResponse response = null;
+            Status response = null;
 
             try
             {
-                response = await this.statusService.GetTicketStatus(id);
+                response = await this.statusService.GetTicketResult(id);
             }
             catch(ArgumentException argumentException)
             {
                 return BadRequest(argumentException.Message);
+            }
+            catch(TicketNotFoundException ticketNotFoundException)
+            {
+                return NotFound(ticketNotFoundException.Message);
             }
             catch(Exception)
             {

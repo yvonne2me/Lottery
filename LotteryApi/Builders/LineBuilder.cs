@@ -2,15 +2,11 @@ using System;
 using System.Collections.Generic;
 using Models.Domain;
 
-namespace Services
+namespace Builders
 {
-    public class LineService : ILineService
+    public static class LineBuilder
     {
-        public LineService()
-        {
-        }
-
-        public List<Line> CreateLines(Guid ticketId, int numberOfLines)
+        public static List<Line> CreateLines(Guid ticketId, int numberOfLines)
         {
             if(numberOfLines <= 0) 
             {
@@ -28,7 +24,7 @@ namespace Services
             return lines;
         }
 
-        public Line AddLine(Guid ticketId)
+        public static Line AddLine(Guid ticketId)
         {
             Line line = new Line()
             {
@@ -40,7 +36,7 @@ namespace Services
             return line;
         }
 
-        private string GetNumbers()
+        private static string GetNumbers()
         {
             Random rnd = new Random();
             int[] numbers = new int[3];

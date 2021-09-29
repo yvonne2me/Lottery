@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Exceptions;
 using Models.API;
 using Models.Domain;
 using Repositories;
@@ -16,62 +17,74 @@ namespace Services
             this.ticketRepository = ticketRepository;
         }
 
-        public async Task<StatusResponse> GetTicketStatus(Guid id)
+        public async Task<Status> GetTicketResult(Guid id)
         {
-            var ticket = await this.ticketRepository.GetTicket(id);
+            var ticket = await this.ticketRepository.GetTicket(id);        
 
-            StatusResponse statusResponse = new StatusResponse();          
-            statusResponse.StatusLineResponses = CheckLinesOnTicket(ticket);
+            if(ticket == null)
+            {
+                throw new TicketNotFoundException("Ticket Does Not Exist");
+            }
 
-            return statusResponse;
+            Status result = new Status();          
+            result.LineStatus = CheckLinesOnTicket(ticket);
 
-            //UPDATE Ticket - Checked = TRUE
+            await this.ticketRepository.StatusChecked(ticket);
+
+            return result;
         }
 
-        private List<StatusLineResponse> CheckLinesOnTicket(Ticket ticket)
+        private List<LineStatus> CheckLinesOnTicket(Ticket ticket)
         {
-            List<StatusLineResponse> response = new List<StatusLineResponse>();
+            List<LineStatus> response = new List<LineStatus>();
 
             foreach(var line in ticket.Lines)
             {
-                var statusLineResponse = new StatusLineResponse();
-                statusLineResponse.Numbers = line.Numbers;
-                statusLineResponse.Result = GetResult(line.Numbers);
-                response.Add(statusLineResponse);
+                var lineResult = new LineStatus();
+                lineResult.Numbers = line.Numbers;
+                lineResult.Result = GetResult(line.Numbers);
+                response.Add(lineResult);
             }
 
-            return response.OrderBy(r => r.Result).ToList();
+            return response.OrderByDescending(r => r.Result).ToList();
         }
 
         private int GetResult(string numbers)
         {
-            List<int> orderedList = new List<int>();
+            List<int> numberList = GetListOfNumbers(numbers);
+
+            int result = 0;
+
+            if(numberList[0]+numberList[1]+numberList[2]==2)
+            {
+                result = 10;
+            }
+            else if(numberList[0]==numberList[1] && numberList[1]==numberList[2])
+            {
+                result = 5;
+            }
+            else if(numberList[0]!=numberList[1] && numberList[0] != numberList[2])
+            {
+                result = 1;
+            }
+
+            return result;
+        }
+
+        private List<int> GetListOfNumbers(string numbers)
+        {
+            List<int> numberList = new List<int>();
 
             foreach(var s in numbers.Split(',')) 
             {
                 int num;
                 if (int.TryParse(s, out num))
                 {
-                    orderedList.Add(num);
+                    numberList.Add(num);
                 }
             }
 
-            int result = 0;
-
-            if(orderedList[0]+orderedList[1]+orderedList[2]==2)
-            {
-                result = 10;
-            }
-            else if(orderedList[0]==orderedList[1] && orderedList[1]==orderedList[2])
-            {
-                result = 5;
-            }
-            else if(orderedList[0]!=orderedList[1] && orderedList[0] != orderedList[2])
-            {
-                result = 1;
-            }
-
-            return result;
-        } 
+            return numberList;
+        }
     }
 }
