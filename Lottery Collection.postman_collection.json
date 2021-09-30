@@ -724,6 +724,90 @@
 					"response": []
 				},
 				{
+					"name": "Status - PUT - Results In Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('PUT Status - Results In Correct Order', () => {",
+									"    var listOfResults = Array();",
+									"    var responseMessage = pm.response.json();",
+									"    _.each(responseMessage.lineStatus, (item) => {        ",
+									"        listOfResults.push(item.result);        ",
+									"    })",
+									"",
+									"    const isAscending = (listOfResults) => {",
+									"    for (let i = 0; i < listOfResults.length; i++) {",
+									"        if (i > 0 && listOfResults[i - 1] > listOfResults[i]) {",
+									"        return false;",
+									"            }",
+									"        }",
+									"        return true;",
+									"    }",
+									"",
+									"    pm.expect(isAscending(listOfResults)).to.equal(true)",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Define a ticket",
+									"var ticket =  {",
+									"    \"numberOfLines\": pm.collectionVariables.get('random_number')",
+									"}",
+									"",
+									"const body = {",
+									"    mode: \"raw\",",
+									"    raw: ticket,",
+									"}",
+									"",
+									"var options = { method: 'POST',",
+									"  url: pm.collectionVariables.get('Base_URL') + \"/ticket\",",
+									"  header: {\"Content-Type\": \"application/json\"},",
+									"  body: body",
+									"};",
+									"",
+									"pm.sendRequest(options, function (error, response) {",
+									"    if (error) throw new Error(error);",
+									"    var jsonData = response.json();",
+									"    pm.collectionVariables.set('ticketId', jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{Base_URL}}/status/{{ticketId}}",
+							"host": [
+								"{{Base_URL}}"
+							],
+							"path": [
+								"status",
+								"{{ticketId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Status - PUT - 404",
 					"event": [
 						{
