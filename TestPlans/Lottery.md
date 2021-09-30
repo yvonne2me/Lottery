@@ -57,3 +57,4 @@ Scenarios covered:
 - PUT Ticket - Ticket Already Checked - Returns 400/Bad Request
 - PUT Status - Ticket Exists - Returns 200/OK
 - PUT Status - Ticket Does Not Exist - Returns 404/Not Found 
+- PUT Status - Returns Results in Correct Order

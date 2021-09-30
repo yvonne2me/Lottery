@@ -15,9 +15,8 @@ namespace Controllers
     {
         private readonly IFileLogger logger;
         private IMapper mapper;
-
         private IStatusService statusService;
-
+        
         public StatusController(IFileLogger logger, IMapper mapper, IStatusService statusService)
         {
             this.logger = logger;
@@ -40,10 +39,12 @@ namespace Controllers
             }
             catch(TicketNotFoundException ticketNotFoundException)
             {
+                this.logger.LogInfo("PUT Status: " + ticketNotFoundException.Message);
                 return NotFound(ticketNotFoundException.Message);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                this.logger.LogError("PUT Status", ex);
                 throw new Exception("Error occurred while checking Status");
             }
 

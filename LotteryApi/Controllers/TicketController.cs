@@ -7,7 +7,6 @@ using Logging;
 using Services;
 using Exceptions;
 using System.Collections.Generic;
-using Models.Domain;
 
 namespace Controllers
 {
@@ -45,10 +44,12 @@ namespace Controllers
             }
             catch(ArgumentException argumentException)
             {
+                this.logger.LogInfo("POST Ticket - Bad Request: " + argumentException.Message);
                 return BadRequest(argumentException.Message);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                this.logger.LogError("POST Ticket", ex);
                 throw new Exception("Error occurred while saving Ticket");
             }
 
@@ -77,10 +78,12 @@ namespace Controllers
             }
             catch(ArgumentException argumentException)
             {
+                this.logger.LogInfo("PUT Ticket - Bad Request: " + argumentException.Message);
                 return BadRequest(argumentException.Message);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                this.logger.LogError("PUT Ticket", ex);
                 throw new Exception("Error occurred while updating Ticket");
             }
 
@@ -104,10 +107,12 @@ namespace Controllers
             }
             catch(TicketNotFoundException ticketNotFoundException)
             {
+                this.logger.LogInfo("GET Ticket: " + ticketNotFoundException.Message);
                 return NotFound(ticketNotFoundException.Message);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                this.logger.LogError("GET Ticket", ex);
                 throw new Exception("Error occurred while getting Ticket");
             }
 
@@ -137,10 +142,12 @@ namespace Controllers
             }
             catch(TicketNotFoundException ticketNotFoundException)
             {
+                this.logger.LogInfo("GET All Tickets: " + ticketNotFoundException.Message);
                 return NotFound(ticketNotFoundException.Message);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                this.logger.LogError("GET All Tickets", ex);
                 throw new Exception("Error occurred while getting Ticket");
             }
 

@@ -46,7 +46,7 @@ namespace Services
                 response.Add(lineResult);
             }
 
-            return response.OrderByDescending(r => r.Result).ToList();
+            return response.OrderBy(r => r.Result).ToList();
         }
 
         private int GetResult(string numbers)
